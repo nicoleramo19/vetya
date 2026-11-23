@@ -39,6 +39,48 @@ function limitado(ip) {
   return registro.length > max;
 }
 
+/** Edad legible a partir de la fecha de nacimiento (p. ej. "3 año(s)"). */
+function edadTexto(nacimiento) {
+  if (!nacimiento) return '';
+  const n = new Date(nacimiento);
+  if (Number.isNaN(n.getTime())) return '';
+  const hoy = new Date();
+  let anios = hoy.getFullYear() - n.getFullYear();
+  const m = hoy.getMonth() - n.getMonth();
+  if (m < 0 || (m === 0 && hoy.getDate() < n.getDate())) anios--;
+  if (anios < 0) return '';
+  if (anios === 0) {
+    const meses = Math.max(0, Math.round((hoy - n) / (1000 * 60 * 60 * 24 * 30.44)));
+    return `${meses} mes(es)`;
+  }
+  return `${anios} año(s)`;
+}
+
+/**
+ * Arma la ficha de la mascota en texto para dársela a la IA.
+ * Aquí es donde la IA "ve" los datos del perfil de la mascota.
+ */
+function fichaMascota(m) {
+  if (!m || (!m.nombre && !m.especie)) {
+    return 'No hay ficha registrada todavía. Si el caso lo pide, invita amablemente a crear el perfil de la mascota para orientar mejor.';
+  }
+  const p = [];
+  p.push(`Nombre: ${m.nombre || 'sin nombre'}`);
+  p.push(`Especie: ${m.especie || 'no indicada'}`);
+  if (m.raza) p.push(`Raza: ${m.raza}`);
+  const edad = m.edad || edadTexto(m.nacimiento);
+  if (edad) p.push(`Edad: ${edad}`);
+  if (m.pesoKg) p.push(`Peso: ${m.pesoKg} kg`);
+  if (m.sexo) p.push(`Sexo: ${m.sexo}`);
+  if (m.esterilizado === true || m.esterilizado === false) p.push(`Esterilizado: ${m.esterilizado ? 'sí' : 'no'}`);
+  if (m.condiciones) p.push(`Condiciones médicas: ${m.condiciones}`);
+  if (m.medicamentos) p.push(`Medicamentos actuales: ${m.medicamentos}`);
+  if (m.alergias) p.push(`Alergias: ${m.alergias}`);
+  if (m.notas) p.push(`Notas: ${m.notas}`);
+  if (m.veterinario) p.push(`Veterinario de confianza: ${m.veterinario}${m.telefonoVet ? ` (tel. ${m.telefonoVet})` : ''}`);
+  return p.join('; ');
+}
+
 /**
  * Capa de lenguaje (IA).
  * REGLA DE ORO: el modelo NO clasifica urgencia. Recibe un resultado ya
@@ -59,6 +101,10 @@ app.post('/api/chat', async (req, res) => {
   const system = [
     'Eres el asistente de VetYa, una línea de ayuda para dueños de mascotas en México.',
     'Hablas en español claro, cálido, breve (máximo 120 palabras). Nada de jerga médica.',
+    '',
+    'FICHA DE LA MASCOTA (SÍ tienes acceso a estos datos; úsalos para personalizar):',
+    fichaMascota(mascota),
+    '',
     'REGLAS ABSOLUTAS:',
     '1. NO diagnosticas. Nunca digas "tu mascota tiene X enfermedad".',
     '2. NO recomiendas medicamentos ni dosis, ni inducir vómito por tu cuenta.',
@@ -66,10 +112,11 @@ app.post('/api/chat', async (req, res) => {
     '   Si el nivel es ROJO, jamás digas que puede esperar.',
     '4. Siempre terminas invitando a acudir con un veterinario.',
     '5. Si falta información clave, haces 1 o 2 preguntas cortas.',
+    '6. Apóyate en la ficha (edad, peso, condiciones, medicamentos, alergias) y menciónala',
+    '   cuando sea relevante. Si hay alergias o medicamentos, tómalos en cuenta.',
     triaje
       ? `RESULTADO DEL PROTOCOLO (no lo contradigas): nivel=${triaje.nivel}; motivos=${(triaje.motivos || []).join(' / ')}; pasos=${(triaje.pasos || []).join(' | ')}`
       : 'Aún no hay resultado del protocolo: puedes hacer preguntas para entender el caso.',
-    `MASCOTA: ${mascota.nombre || 'sin nombre'}, especie ${mascota.especie || 'desconocida'}, ${mascota.edad || 'edad desconocida'}, ${mascota.peso || 'peso desconocido'}.`,
   ].join('\n');
 
   try {

@@ -759,26 +759,40 @@ async function iniciar() {
     await buscarCercaDe(19.3569, -99.6301);
   });
 
-  $('#form-vet').addEventListener('submit', (e) => {
+  $('#form-vet').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const datos = Object.fromEntries(new FormData(e.target));
-    const vet = {
-      id: `local-${crypto.randomUUID()}`,
-      nombre: datos.nombre,
-      telefono: datos.telefono,
-      direccion: datos.direccion,
-      lat: Number(datos.lat),
-      lng: Number(datos.lng),
-      abierto24h: Boolean(datos.abierto24h),
-      origen: 'Agregada por ti',
-    };
-    const locales = leerVetsLocales();
-    locales.push(vet);
-    localStorage.setItem(LLAVE_VETS, JSON.stringify(locales));
-    if (estado.sesion) Nube.guardarVet(vet).catch(() => {});
-    e.target.reset();
-    aviso('Veterinaria guardada. Ya aparece en el mapa.');
-    if (estado.origenMapa) buscarCercaDe(estado.origenMapa.lat, estado.origenMapa.lng);
+    const form = e.target;
+    const datos = Object.fromEntries(new FormData(form));
+    const boton = form.querySelector('button[type="submit"]');
+    boton.disabled = true;
+    $('#vets-estado').textContent = 'Ubicando la dirección en el mapa…';
+    try {
+      // El usuario escribe la dirección; la app la convierte en coordenadas.
+      const punto = await Mapa.ubicarDireccion(datos.direccion);
+      const vet = {
+        id: `local-${crypto.randomUUID()}`,
+        nombre: datos.nombre,
+        telefono: datos.telefono,
+        direccion: datos.direccion,
+        lat: punto.lat,
+        lng: punto.lng,
+        abierto24h: Boolean(datos.abierto24h),
+        origen: 'Agregada por ti',
+      };
+      const locales = leerVetsLocales();
+      locales.push(vet);
+      localStorage.setItem(LLAVE_VETS, JSON.stringify(locales));
+      if (estado.sesion) Nube.guardarVet(vet).catch(() => {});
+      form.reset();
+      aviso('Veterinaria guardada. Ya aparece en el mapa.');
+      if (estado.origenMapa) buscarCercaDe(estado.origenMapa.lat, estado.origenMapa.lng);
+    } catch (err) {
+      const mensaje = err.message || 'No pude ubicar esa dirección. Intenta con calle y colonia.';
+      $('#vets-estado').textContent = mensaje;
+      aviso(mensaje);
+    } finally {
+      boton.disabled = false;
+    }
   });
 
   $('#form-mascota').addEventListener('submit', async (e) => {

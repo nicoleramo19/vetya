@@ -107,6 +107,33 @@ export function obtenerUbicacion() {
 }
 
 /**
+ * Convierte una dirección escrita en coordenadas (Nominatim / OpenStreetMap).
+ * Así el usuario no tiene que saber latitud ni longitud.
+ * @returns {Promise<{lat:number,lng:number,direccion:string}>}
+ */
+export async function ubicarDireccion(direccion) {
+  const texto = (direccion || '').trim();
+  if (!texto) throw new Error('Escribe la dirección de la veterinaria.');
+
+  // Si pegan coordenadas directamente ("19.35, -99.63"), se aceptan tal cual.
+  const coord = texto.match(/^\s*(-?\d{1,3}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)\s*$/);
+  if (coord) {
+    const lat = Number(coord[1]);
+    const lng = Number(coord[2]);
+    if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180) return { lat, lng, direccion: texto };
+  }
+
+  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=es&q=${encodeURIComponent(texto)}`;
+  const r = await fetch(url, { headers: { Accept: 'application/json' } });
+  if (!r.ok) throw new Error('No pude buscar la dirección en este momento. Inténtalo otra vez.');
+  const lista = await r.json();
+  if (!lista.length) {
+    throw new Error(`No encontré "${texto}". Agrega la colonia o la ciudad y vuelve a intentar.`);
+  }
+  return { lat: Number(lista[0].lat), lng: Number(lista[0].lon), direccion: lista[0].display_name || texto };
+}
+
+/**
  * Busca veterinarias reales en OpenStreetMap alrededor de un punto.
  * @returns {Promise<Array>}
  */

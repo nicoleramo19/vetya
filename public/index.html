@@ -235,11 +235,10 @@
         <summary><svg class="ico" aria-hidden="true"><use href="#ico-mas" /></svg>Agregar una veterinaria que conozcas</summary>
         <div class="panel__cuerpo">
           <form id="form-vet" class="formulario">
+            <p class="sub">Escribe la dirección y nosotros la ubicamos en el mapa. No necesitas coordenadas.</p>
             <label class="campo"><span>Nombre *</span><input name="nombre" required /></label>
             <label class="campo"><span>Teléfono</span><input name="telefono" inputmode="tel" /></label>
-            <label class="campo"><span>Dirección</span><input name="direccion" /></label>
-            <label class="campo"><span>Latitud *</span><input name="lat" inputmode="decimal" required placeholder="19.3569" /></label>
-            <label class="campo"><span>Longitud *</span><input name="lng" inputmode="decimal" required placeholder="-99.6301" /></label>
+            <label class="campo"><span>Dirección *</span><input name="direccion" required placeholder="Calle y colonia, ciudad" /></label>
             <label class="casilla"><input type="checkbox" name="abierto24h" /> <span>Abre 24 horas</span></label>
             <div class="fila-acciones">
               <button class="boton boton--primario" type="submit">Guardar</button>
