@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b3c5d" />
+  <title>VetYa · Línea de ayuda para dueños de mascotas</title>
+  <meta name="description" content="VetYa te dice si es una urgencia real, qué hacer en ese momento y a qué veterinaria acudir. No sustituye una consulta veterinaria." />
+
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/vendor/leaflet.css" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <a class="saltar" href="#principal">Saltar al contenido</a>
+
+  <!-- Iconografía propia (SVG). Sin emojis: lectura profesional y consistente. -->
+  <svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <symbol id="ico-marca" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5l-8-3z" />
+        <line x1="12" y1="8" x2="12" y2="16" />
+        <line x1="8" y1="12" x2="16" y2="12" />
+      </symbol>
+      <symbol id="ico-alerta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+        <line x1="12" y1="9" x2="12" y2="13" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
+      </symbol>
+      <symbol id="ico-reloj" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+      </symbol>
+      <symbol id="ico-mapa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+        <circle cx="12" cy="10" r="3" />
+      </symbol>
+      <symbol id="ico-corazon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+      </symbol>
+      <symbol id="ico-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+      </symbol>
+      <symbol id="ico-usuario" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
+      </symbol>
+      <symbol id="ico-ubicacion" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9" />
+        <line x1="21" y1="12" x2="17" y2="12" />
+        <line x1="7" y1="12" x2="3" y2="12" />
+        <line x1="12" y1="7" x2="12" y2="3" />
+        <line x1="12" y1="21" x2="12" y2="17" />
+      </symbol>
+      <symbol id="ico-centro" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="2 6 2 21 9 17 15 21 22 17 22 3 15 6 9 2 2 6" />
+        <line x1="9" y1="2" x2="9" y2="17" />
+        <line x1="15" y1="6" x2="15" y2="21" />
+      </symbol>
+      <symbol id="ico-telefono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
+      </symbol>
+      <symbol id="ico-ruta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="3 11 22 2 13 21 11 13 3 11" />
+      </symbol>
+      <symbol id="ico-descargar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <polyline points="7 10 12 15 17 10" />
+        <line x1="12" y1="15" x2="12" y2="3" />
+      </symbol>
+      <symbol id="ico-compartir" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="18" cy="5" r="3" />
+        <circle cx="6" cy="12" r="3" />
+        <circle cx="18" cy="19" r="3" />
+        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+      </symbol>
+      <symbol id="ico-micro" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+        <line x1="12" y1="19" x2="12" y2="23" />
+        <line x1="8" y1="23" x2="16" y2="23" />
+      </symbol>
+      <symbol id="ico-voz" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+      </symbol>
+      <symbol id="ico-contraste" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 2a10 10 0 0 1 0 20z" fill="currentColor" stroke="none" />
+      </symbol>
+      <symbol id="ico-mas" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19" />
+        <line x1="5" y1="12" x2="19" y2="12" />
+      </symbol>
+      <symbol id="ico-sangre" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z" />
+      </symbol>
+      <symbol id="ico-aviso" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </symbol>
+    </defs>
+  </svg>
+
+  <header class="barra">
+    <div class="barra__marca">
+      <span class="marca__icono" aria-hidden="true">
+        <svg class="ico"><use href="#ico-marca" /></svg>
+      </span>
+      <div class="marca__texto">
+        <strong>VetYa</strong>
+        <span>Línea de ayuda para mascotas</span>
+      </div>
+    </div>
+
+    <button id="chip-mascota" class="chip" type="button" title="Ficha de la mascota">
+      <svg class="ico" aria-hidden="true"><use href="#ico-corazon" /></svg>
+      <span id="chip-mascota-texto">Sin mascota</span>
+    </button>
+
+    <div class="barra__accesibilidad" role="group" aria-label="Opciones de accesibilidad">
+      <button id="btn-fuente-menos" type="button" title="Reducir tamaño del texto">A−</button>
+      <button id="btn-fuente-mas" type="button" title="Aumentar tamaño del texto">A+</button>
+      <button id="btn-contraste" type="button" title="Activar alto contraste" aria-label="Alto contraste">
+        <svg class="ico" aria-hidden="true"><use href="#ico-contraste" /></svg>
+      </button>
+      <button id="btn-voz" type="button" title="Leer las respuestas en voz alta" aria-label="Lectura en voz alta" aria-pressed="false">
+        <svg class="ico" aria-hidden="true"><use href="#ico-voz" /></svg>
+      </button>
+    </div>
+  </header>
+
+  <nav class="menu" aria-label="Secciones">
+    <button data-vista="inicio" class="activo" type="button"><svg class="ico" aria-hidden="true"><use href="#ico-alerta" /></svg>Urgencia</button>
+    <button data-vista="check" type="button"><svg class="ico" aria-hidden="true"><use href="#ico-reloj" /></svg>¿Corro o espero?</button>
+    <button data-vista="vets" type="button"><svg class="ico" aria-hidden="true"><use href="#ico-mapa" /></svg>Veterinarias</button>
+    <button data-vista="mascota" type="button"><svg class="ico" aria-hidden="true"><use href="#ico-corazon" /></svg>Mi mascota</button>
+    <button data-vista="chat" type="button"><svg class="ico" aria-hidden="true"><use href="#ico-chat" /></svg>Chat</button>
+    <button data-vista="cuenta" type="button"><svg class="ico" aria-hidden="true"><use href="#ico-usuario" /></svg>Mi cuenta</button>
+  </nav>
+
+  <main id="principal">
+
+    <!-- ================= URGENCIA ================= -->
+    <section id="vista-inicio" class="vista activa" aria-labelledby="t-inicio">
+      <div class="hero">
+        <span class="hero__sello">Orientación en urgencias · Estado de México</span>
+        <h1 id="t-inicio">¿Qué le está pasando a tu mascota?</h1>
+        <p>Selecciona la opción que más se parezca a lo que ves. Al instante sabrás qué tan urgente es y qué hacer mientras consigues ayuda veterinaria.</p>
+      </div>
+
+      <div id="sintomas-por-nivel" class="secciones-sintomas"></div>
+
+      <div class="fila-acciones">
+        <button id="btn-check" class="boton boton--grande" type="button">
+          <svg class="ico" aria-hidden="true"><use href="#ico-reloj" /></svg>
+          No estoy seguro: ¿corro o espero?
+        </button>
+      </div>
+
+      <details class="panel">
+        <summary><svg class="ico" aria-hidden="true"><use href="#ico-aviso" /></svg>Números de emergencia y qué NO hacer</summary>
+        <div id="panel-emergencia" class="panel__cuerpo"></div>
+      </details>
+
+      <div id="aviso-legal" class="aviso-legal">
+        <svg class="ico" aria-hidden="true"><use href="#ico-aviso" /></svg>
+        <p><strong>Importante:</strong> VetYa orienta, pero <strong>no es un diagnóstico ni sustituye una consulta veterinaria</strong>. Ante la duda, acude siempre con un profesional.</p>
+      </div>
+    </section>
+
+    <!-- ================= DETALLE DEL SÍNTOMA ================= -->
+    <section id="vista-sintoma" class="vista" aria-labelledby="t-sintoma">
+      <button class="volver" data-vista="inicio" type="button">← Volver</button>
+      <h2 id="t-sintoma">Cuéntanos un poco más</h2>
+
+      <div id="lista-seleccionados" class="etiquetas"></div>
+      <div id="preguntas-seguimiento" class="preguntas"></div>
+
+      <label for="texto-libre" class="campo">
+        <span>Describe con tus palabras qué pasó (opcional)</span>
+        <textarea id="texto-libre" rows="3" placeholder="Ejemplo: hace una hora se comió un chocolate y está temblando"></textarea>
+      </label>
+
+      <div class="fila-acciones">
+        <button id="btn-dictado" class="boton" type="button">
+          <svg class="ico" aria-hidden="true"><use href="#ico-micro" /></svg>
+          Dictar
+        </button>
+        <button id="btn-evaluar" class="boton boton--primario boton--grande" type="button">Evaluar urgencia</button>
+      </div>
+    </section>
+
+    <!-- ================= ¿CORRO O ESPERO? ================= -->
+    <section id="vista-check" class="vista" aria-labelledby="t-check">
+      <h2 id="t-check">¿Corro o espero?</h2>
+      <p class="sub">Marca «Sí» solo en lo que veas ahora mismo. Basta un «Sí» para que sea urgente.</p>
+      <div id="lista-bandera" class="lista-bandera"></div>
+      <div class="fila-acciones">
+        <button id="btn-evaluar-check" class="boton boton--primario boton--grande" type="button">Ver resultado</button>
+      </div>
+      <div id="check-resultado" class="resultado" hidden></div>
+    </section>
+
+    <!-- ================= RESULTADO ================= -->
+    <section id="vista-resultado" class="vista" aria-labelledby="t-resultado">
+      <button class="volver" data-vista="inicio" type="button">← Nueva evaluación</button>
+      <h2 id="t-resultado" class="oculto-visualmente">Resultado</h2>
+      <div id="resultado-caja" class="resultado" aria-live="polite"></div>
+    </section>
+
+    <!-- ================= VETERINARIAS ================= -->
+    <section id="vista-vets" class="vista" aria-labelledby="t-vets">
+      <h2 id="t-vets">Veterinarias cerca de ti</h2>
+      <p class="sub">Datos abiertos de OpenStreetMap. El horario no siempre está registrado: si dudas, llama antes de salir.</p>
+      <div class="fila-acciones">
+        <button id="btn-ubicacion" class="boton boton--primario" type="button">
+          <svg class="ico" aria-hidden="true"><use href="#ico-ubicacion" /></svg>
+          Usar mi ubicación
+        </button>
+        <button id="btn-ubicacion-centro" class="boton" type="button">
+          <svg class="ico" aria-hidden="true"><use href="#ico-centro" /></svg>
+          Ver Estado de México
+        </button>
+      </div>
+      <div id="mapa" class="mapa"></div>
+      <p id="vets-estado" class="sub" role="status" aria-live="polite"></p>
+      <div id="lista-vets" class="lista-vets"></div>
+
+      <details class="panel">
+        <summary><svg class="ico" aria-hidden="true"><use href="#ico-mas" /></svg>Agregar una veterinaria que conozcas</summary>
+        <div class="panel__cuerpo">
+          <form id="form-vet" class="formulario">
+            <label class="campo"><span>Nombre *</span><input name="nombre" required /></label>
+            <label class="campo"><span>Teléfono</span><input name="telefono" inputmode="tel" /></label>
+            <label class="campo"><span>Dirección</span><input name="direccion" /></label>
+            <label class="campo"><span>Latitud *</span><input name="lat" inputmode="decimal" required placeholder="19.3569" /></label>
+            <label class="campo"><span>Longitud *</span><input name="lng" inputmode="decimal" required placeholder="-99.6301" /></label>
+            <label class="casilla"><input type="checkbox" name="abierto24h" /> <span>Abre 24 horas</span></label>
+            <div class="fila-acciones">
+              <button class="boton boton--primario" type="submit">Guardar</button>
+            </div>
+          </form>
+        </div>
+      </details>
+    </section>
+
+    <!-- ================= MI MASCOTA ================= -->
+    <section id="vista-mascota" class="vista" aria-labelledby="t-mascota">
+      <h2 id="t-mascota">Ficha de mi mascota</h2>
+      <p class="sub">Cada mascota tiene su propia ficha médica. Las respuestas se adaptan a ella.</p>
+
+      <div id="lista-mascotas" class="lista-mascotas"></div>
+
+      <form id="form-mascota" class="formulario">
+        <input type="hidden" name="id" />
+        <label class="campo"><span>Nombre *</span><input name="nombre" required /></label>
+        <label class="campo"><span>Especie *</span>
+          <select name="especie">
+            <option value="perro">Perro</option>
+            <option value="gato">Gato</option>
+            <option value="otro">Otro</option>
+          </select>
+        </label>
+        <label class="campo"><span>Raza</span><input name="raza" /></label>
+        <label class="campo"><span>Fecha de nacimiento</span><input name="nacimiento" type="date" /></label>
+        <label class="campo"><span>Peso (kg)</span><input name="pesoKg" inputmode="decimal" /></label>
+        <label class="campo"><span>Sexo</span>
+          <select name="sexo">
+            <option value="">Sin especificar</option>
+            <option value="hembra">Hembra</option>
+            <option value="macho">Macho</option>
+          </select>
+        </label>
+        <label class="campo"><span>Condiciones médicas</span><input name="condiciones" placeholder="Ej: epilepsia, diabetes" /></label>
+        <label class="campo"><span>Medicamentos actuales</span><input name="medicamentos" /></label>
+        <label class="campo"><span>Alergias</span><input name="alergias" /></label>
+        <label class="campo"><span>Veterinario de confianza</span><input name="veterinario" /></label>
+        <label class="campo"><span>Teléfono del veterinario</span><input name="telefonoVet" inputmode="tel" /></label>
+        <label class="campo"><span>Contacto del dueño (para emergencias)</span><input name="contactoDueno" inputmode="tel" /></label>
+        <label class="campo"><span>Notas</span><textarea name="notas" rows="2"></textarea></label>
+
+        <div class="fila-acciones">
+          <button class="boton boton--primario boton--grande" type="submit">Guardar ficha</button>
+          <button id="btn-eliminar-mascota" class="boton boton--peligro" type="button">Eliminar</button>
+        </div>
+      </form>
+
+      <h3>Tarjeta de emergencia</h3>
+      <p class="sub">Quien cuide a tu mascota puede escanear este código y ver sus datos clave, sin necesidad de cuenta.</p>
+      <div class="qr-caja">
+        <div class="qr-caja__lienzo">
+          <canvas id="qr-canvas" width="240" height="240" aria-label="Código QR de la ficha de emergencia"></canvas>
+        </div>
+        <pre id="texto-emergencia" class="texto-emergencia"></pre>
+      </div>
+      <div class="fila-acciones">
+        <button id="btn-descargar-qr" class="boton" type="button">
+          <svg class="ico" aria-hidden="true"><use href="#ico-descargar" /></svg>
+          Descargar QR
+        </button>
+        <button id="btn-compartir-qr" class="boton" type="button">
+          <svg class="ico" aria-hidden="true"><use href="#ico-compartir" /></svg>
+          Compartir ficha
+        </button>
+      </div>
+
+      <h3>Historial de evaluaciones</h3>
+      <div id="historial" class="historial"></div>
+    </section>
+
+    <!-- ================= CHAT ================= -->
+    <section id="vista-chat" class="vista" aria-labelledby="t-chat">
+      <h2 id="t-chat">Chat de orientación</h2>
+      <p class="sub" id="chat-fuente"></p>
+      <div id="chat-mensajes" class="chat" aria-live="polite"></div>
+      <form id="chat-form" class="chat__barra">
+        <input id="chat-input" type="text" placeholder="Escribe tu duda…" autocomplete="off" aria-label="Escribe tu duda" />
+        <button id="btn-chat-voz" class="boton" type="button" title="Dictar" aria-label="Dictar">
+          <svg class="ico" aria-hidden="true"><use href="#ico-micro" /></svg>
+        </button>
+        <button class="boton boton--primario" type="submit">Enviar</button>
+      </form>
+      <p class="aviso-legal">
+        <svg class="ico" aria-hidden="true"><use href="#ico-aviso" /></svg>
+        <span>El chat orienta y explica. No diagnostica, no receta y no sustituye una consulta veterinaria.</span>
+      </p>
+    </section>
+
+    <!-- ================= CUENTA ================= -->
+    <section id="vista-cuenta" class="vista" aria-labelledby="t-cuenta">
+      <h2 id="t-cuenta">Mi cuenta</h2>
+      <div id="auth-estado" class="sub"></div>
+
+      <div id="modo-local" class="panel-aviso" hidden>
+        La nube todavía no está configurada, así que tus fichas se guardan <strong>en este dispositivo</strong>.
+        Cuando el proyecto tenga las claves de Supabase, aquí podrás crear tu cuenta y tener todo sincronizado.
+      </div>
+
+      <form id="form-auth" class="formulario" hidden>
+        <label class="campo"><span>Correo</span><input name="email" type="email" required /></label>
+        <label class="campo"><span>Contraseña (mínimo 6 caracteres)</span><input name="password" type="password" minlength="6" required /></label>
+        <div class="fila-acciones">
+          <button class="boton boton--primario" type="submit" data-accion="entrar">Entrar</button>
+          <button class="boton" type="button" data-accion="registrar">Crear cuenta</button>
+        </div>
+      </form>
+
+      <div class="fila-acciones">
+        <button id="btn-salir" class="boton boton--peligro" type="button" hidden>Cerrar sesión</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="pie">
+    <p>
+      <strong>VetYa</strong> · Herramienta de orientación en urgencias para dueños de mascotas.
+      No sustituye una consulta veterinaria real. Ante cualquier duda, acude a un profesional.
+    </p>
+    <p class="pie__datos">Mapas y veterinarias: © OpenStreetMap · Rutas: OSRM — proyectos abiertos y gratuitos.</p>
+  </footer>
+
+  <div id="aviso-flotante" class="aviso-flotante" role="status" aria-live="polite"></div>
+
+  <script src="/vendor/leaflet.js"></script>
+  <script src="/vendor/qrcode-generator.js"></script>
+  <script src="/vendor/supabase.js"></script>
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

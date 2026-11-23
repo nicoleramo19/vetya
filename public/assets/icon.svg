@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="VetYa">
+  <rect width="128" height="128" rx="28" fill="#0f172a"/>
+  <circle cx="64" cy="66" r="34" fill="#1565c0"/>
+  <path d="M50 78c0-10 6-16 14-16s14 6 14 16c0 7-6 12-14 12s-14-5-14-12z" fill="#ffffff"/>
+  <circle cx="40" cy="44" r="9" fill="#ffffff"/>
+  <circle cx="88" cy="44" r="9" fill="#ffffff"/>
+  <path d="M20 108l10-22 10 22z" fill="#d32f2f"/>
+  <path d="M88 108l10-22 10 22z" fill="#d32f2f"/>
+</svg>
