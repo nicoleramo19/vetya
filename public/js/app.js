@@ -255,7 +255,10 @@ function pintarSintomaDetalle() {
 /** Tóxicos filtrados por la especie de la mascota activa. */
 function TOXICOS_PARA_ESPECIE() {
   const especie = estado.mascota?.especie;
-  return TOXICOS.filter((t) => !especie || t.especies.includes(especie));
+  // Sin ficha o especie "otro" (desconocida): mostramos todos los comunes.
+  if (!especie || especie === 'otro') return TOXICOS;
+  const deEspecie = TOXICOS.filter((t) => t.especies.includes(especie));
+  return deEspecie.length ? deEspecie : TOXICOS;
 }
 
 function evaluarYMostrar() {
@@ -455,9 +458,13 @@ function pintarListaVets(vets, origen) {
     acc.appendChild(el('button', {
       clase: 'boton', type: 'button',
       onclick: async (e) => {
+        // currentTarget deja de ser válido tras el await: lo guardamos antes.
+        const boton = e.currentTarget;
+        boton.disabled = true;
         const ruta = await Mapa.calcularRuta(origen, v);
         const min = Math.round(ruta.duracionSeg / 60);
-        e.currentTarget.textContent = `≈ ${min} min · ${Mapa.formatearDistancia(ruta.distancia)}${ruta.estimado ? ' (aprox.)' : ''}`;
+        boton.textContent = `≈ ${min} min · ${Mapa.formatearDistancia(ruta.distancia)}${ruta.estimado ? ' (aprox.)' : ''}`;
+        boton.disabled = false;
       },
     }, [icono('reloj'), nodoTexto('¿Cuánto tardo?')]));
 

@@ -22,13 +22,47 @@ export function normalizar(texto = '') {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
+/** Especies que tienen lista propia de tóxicos; cualquier otra se trata como "desconocida". */
+const ESPECIES_CONOCIDAS = ['perro', 'gato'];
+
+const RE_ESPECIALES = /[.*+?^${}()|[\]\\]/g;
+
+/**
+ * Alias que en español son palabras de uso común y provocan falsos positivos
+ * ("me pasa algo", "se vino a dormir", "una pila de hojas"). Para estos solo
+ * se cuenta el caso si el texto habla de que el animal se lo comió/bebió/etc.
+ */
+const ALIAS_AMBIGUOS = new Set(['pasa', 'pasas', 'vino', 'pila', 'pilas', 'moneda', 'monedas', 'ron']);
+
+const RE_INGESTION =
+  /(comio|comieron|comiendo|ingirio|ingirieron|ingiriendo|trago|tragaron|tragando|mordio|mordieron|lamio|lamieron|bebio|bebieron|bebiendo|tomo|tomaron|mastico|masticando|se comio|se trago|se bebio)/;
+
+/**
+ * ¿El texto (ya normalizado) menciona esta palabra o frase completa?
+ * Usa límites de palabra en vez de subcadena para evitar falsos positivos
+ * como "bajo" -> ajo, "ronronea" -> ron o "pasa" -> uvas.
+ * Se permite una "s" final para reconocer plurales (cebollas, chocolates).
+ */
+function mencionaPalabra(texto, palabra) {
+  const p = normalizar(palabra).trim();
+  if (!p) return false;
+  const esc = p.replace(RE_ESPECIALES, '\\$&');
+  return new RegExp(`(^|[^a-z0-9])${esc}s?([^a-z0-9]|$)`).test(texto);
+}
+
 /** Busca tóxicos mencionados en el texto libre del dueño. */
 export function detectarToxicos(texto = '', especie) {
   const t = normalizar(texto);
   if (!t.trim()) return [];
+  const filtrarPorEspecie = ESPECIES_CONOCIDAS.includes(especie);
+  const hayIngestion = RE_INGESTION.test(t);
   return TOXICOS.filter((tox) => {
-    if (especie && !tox.especies.includes(especie)) return false;
-    return tox.alias.some((a) => t.includes(normalizar(a)));
+    if (filtrarPorEspecie && !tox.especies.includes(especie)) return false;
+    return tox.alias.some((a) => {
+      const p = normalizar(a).trim();
+      if (ALIAS_AMBIGUOS.has(p) && !hayIngestion) return false;
+      return mencionaPalabra(t, a);
+    });
   });
 }
 
@@ -95,9 +129,10 @@ export function evaluar({ sintomas = [], respuestas = {}, mascota = {}, texto = 
     toxicos.push(sustanciaElegida);
   }
   toxicos.forEach((tox) => {
-    niveles.push('rojo');
+    const nivelTox = tox.nivel || 'rojo';
+    niveles.push(nivelTox);
     motivos.push(`${tox.nombre}: ${tox.nota}`);
-    if (tox.nivel === 'rojo') {
+    if (nivelTox === 'rojo') {
       pasos.unshift(
         `Contacta YA a una veterinaria con urgencias: la exposición a ${tox.nombre} puede empeorar en horas.`
       );
@@ -116,8 +151,8 @@ export function evaluar({ sintomas = [], respuestas = {}, mascota = {}, texto = 
     nivel = 'amarillo';
     motivos.push('Es adulto mayor: conviene no dejar pasar los síntomas.');
   }
-  if ((mascota?.condiciones || '').trim() && nivel === 'amarillo') {
-    nivel = 'rojo';
+  if ((mascota?.condiciones || '').trim() && nivel !== 'rojo') {
+    nivel = subirNivel(nivel);
     motivos.push(`Tiene una condición previa registrada ("${mascota.condiciones}"): el riesgo aumenta.`);
   }
   if (mascota?.medicamentos?.trim()) {

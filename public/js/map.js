@@ -38,6 +38,20 @@ export function enlaceLlamada(telefono) {
   return `tel:${String(telefono).replace(/[^\d+]/g, '')}`;
 }
 
+/**
+ * Escapa texto que viene de otras personas (nombre/dirección de una veterinaria)
+ * antes de meterlo en el HTML del popup. Evita inyección de código (XSS).
+ */
+function escaparHtml(valor) {
+  return String(valor ?? '').replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  })[c]);
+}
+
 /** ¿Está abierto ahora? Solo podemos afirmarlo si el dato dice 24/7. */
 export function estadoApertura(vet) {
   if (vet.abierto24h) return { abierto: true, texto: 'Abierto 24 h' };
@@ -202,7 +216,7 @@ export function dibujarVets(vets, origen) {
     })
       .addTo(capaMarcadores)
       .bindPopup(
-        `<strong>${v.nombre}</strong><br>${v.direccion || ''}` +
+        `<strong>${escaparHtml(v.nombre)}</strong><br>${escaparHtml(v.direccion || '')}` +
           (v.telefono ? `<br><a href="${enlaceLlamada(v.telefono)}">Llamar</a>` : '') +
           `<br><a target="_blank" rel="noopener" href="${enlaceNavegacion(v.lat, v.lng)}">Ir ahora</a>`
       );
