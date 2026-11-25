@@ -6,7 +6,9 @@
  * compartir el texto de la ficha.
  */
 
-const RUTA_LIB = '/vendor/qrcode-generator.js';
+// Ruta relativa al propio módulo: funciona en Render (/js/qr.js -> /vendor/...)
+// y también en GitHub Pages (/vetya/public/js/qr.js -> /vetya/public/vendor/...).
+const RUTA_LIB = new URL('../vendor/qrcode-generator.js', import.meta.url).href;
 let cargando = null;
 
 function cargarLibreria() {

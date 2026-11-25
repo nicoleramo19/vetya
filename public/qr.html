@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Generar QR de emergencia · VetYa</title>
+  <style>
+    :root { --azul: #0b2545; --gris: #5b6b7b; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 16px/1.5 system-ui, sans-serif; color: var(--azul); background: #f4f8fb; }
+    main { max-width: 44rem; margin: 0 auto; padding: 1.25rem; }
+    h1 { margin: 0 0 .2rem; font-size: 1.6rem; }
+    p.sub { color: var(--gris); margin-top: 0; }
+    .tarjeta { background: #fff; border: 1px solid #d9e4ee; border-radius: 16px; padding: 1rem; margin-bottom: 1rem; }
+    label { display: block; font-size: .85rem; font-weight: 700; margin-top: .7rem; }
+    input { width: 100%; padding: .6rem .7rem; border: 1px solid #cbd8e4; border-radius: 8px; font: inherit; }
+    button { margin-top: 1rem; padding: .7rem 1.1rem; border: 0; border-radius: 10px; background: var(--azul); color: #fff; font-weight: 700; cursor: pointer; }
+    button.secundario { background: #e8f0f7; color: var(--azul); }
+    .resultado { text-align: center; }
+    canvas { max-width: 100%; height: auto; image-rendering: pixelated; }
+    #url-qr { font-size: .75rem; color: var(--gris); overflow-wrap: anywhere; }
+    a { color: var(--azul); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>VetYa · QR de emergencia</h1>
+    <p class="sub">Llena la ficha y descarga el QR. Al escanearlo se abre la ficha completa, con botones para llamar al veterinario y al dueño.</p>
+
+    <form id="form-qr" class="tarjeta">
+      <label>Nombre de la mascota<input name="nombre" required placeholder="Ej. Paprika"></label>
+      <label>Especie<input name="especie" placeholder="gato o perro"></label>
+      <label>Raza<input name="raza"></label>
+      <label>Alergias<input name="alergias" placeholder="Ej. pollo"></label>
+      <label>Condiciones<input name="condiciones"></label>
+      <label>Medicamentos<input name="medicamentos"></label>
+      <label>Veterinaria<input name="veterinario"></label>
+      <label>Teléfono del veterinario<input name="telefonoVet" inputmode="tel"></label>
+      <label>Contacto del dueño<input name="contactoDueno" inputmode="tel"></label>
+      <button type="submit">Generar QR</button>
+    </form>
+
+    <div id="panel" class="tarjeta resultado" hidden>
+      <canvas id="qr-canvas" aria-label="Código QR de la ficha"></canvas>
+      <p><button id="descargar" type="button" class="secundario">Descargar PNG</button></p>
+      <p id="url-qr"></p>
+      <p><a id="abrir-ficha" href="#" target="_blank" rel="noopener">Abrir ficha generada</a></p>
+    </div>
+  </main>
+
+  <script type="module">
+    import { textoParaQR } from './js/pets.js';
+    import { pintarQR, descargarCanvas } from './js/qr.js';
+
+    const form = document.getElementById('form-qr');
+    const panel = document.getElementById('panel');
+    const canvas = document.getElementById('qr-canvas');
+    const urlTexto = document.getElementById('url-qr');
+    const enlace = document.getElementById('abrir-ficha');
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const mascota = Object.fromEntries(new FormData(form).entries());
+      const url = textoParaQR(mascota);
+      await pintarQR(canvas, url);
+      urlTexto.textContent = url;
+      enlace.href = url;
+      panel.hidden = false;
+    });
+
+    document.getElementById('descargar').addEventListener('click', () => {
+      descargarCanvas(canvas, 'vetya-ficha-qr.png');
+    });
+  </script>
+</body>
+</html>
