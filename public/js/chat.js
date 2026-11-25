@@ -8,7 +8,14 @@ import { NIVEL_INFO } from './data/protocols.js';
 
 let cacheConfig = null;
 
+// En GitHub Pages no hay backend (solo archivos estáticos): no pedimos /api/config
+// para evitar un 404 en consola y usamos directamente el redactor local.
+function sinBackend() {
+  return location.hostname.endsWith('.github.io');
+}
+
 export async function obtenerConfig() {
+  if (sinBackend()) return { chatEnabled: false };
   if (!cacheConfig) {
     cacheConfig = await fetch('/api/config')
       .then((r) => r.json())

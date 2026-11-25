@@ -21,6 +21,12 @@ export async function iniciar(callbackSesion) {
   if (inicializado) return disponible;
   inicializado = true;
 
+  // GitHub Pages es solo estático: no hay /api/config ni backend de Supabase.
+  if (location.hostname.endsWith('.github.io')) {
+    motivo = 'faltan_llaves';
+    return false;
+  }
+
   try {
     config = await fetch('/api/config').then((r) => r.json());
     if (!config.supabaseUrl || !config.supabaseAnonKey) {
