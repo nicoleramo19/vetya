@@ -80,3 +80,25 @@ export function textoDeEmergencia(mascota) {
   ].filter(Boolean);
   return lineas.join('\n');
 }
+
+/**
+ * Versión COMPACTA para el código QR: menos datos = menos módulos = escanea mejor.
+ * La ficha completa sigue visible al lado para las personas.
+ */
+export function textoParaQR(mascota) {
+  if (!mascota) return '';
+  const corto = (valor, max = 28) =>
+    String(valor).replace(/\s+/g, ' ').trim().slice(0, max);
+
+  const lineas = [
+    ['VETYA', corto(mascota.nombre, 18), corto(mascota.especie, 10)]
+      .filter(Boolean)
+      .join(' | '),
+  ];
+  if (mascota.alergias) lineas.push(`ALERG: ${corto(mascota.alergias)}`);
+  if (mascota.condiciones) lineas.push(`COND: ${corto(mascota.condiciones)}`);
+  if (mascota.telefonoVet) lineas.push(`VET: ${corto(mascota.telefonoVet, 20)}`);
+  else if (mascota.veterinario) lineas.push(`VET: ${corto(mascota.veterinario, 20)}`);
+  if (mascota.contactoDueno) lineas.push(`DUEÑO: ${corto(mascota.contactoDueno, 20)}`);
+  return lineas.join('\n').slice(0, 180);
+}

@@ -7,6 +7,8 @@ dotenv.config();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
+// Detrás de Render el balanceador cambia la IP; sin esto el rate limiter ve a todos igual.
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json({ limit: '256kb' }));
@@ -29,14 +31,26 @@ app.get('/api/config', (_req, res) => {
 
 // --- Límite de uso sencillo en memoria (protege la capa gratuita de Groq) ---
 const hits = new Map();
+const VENTANA = 60_000;
+const MAX_PETICIONES = 20;
+let limpiezas = 0;
 function limitado(ip) {
   const ahora = Date.now();
-  const ventana = 60_000;
-  const max = 20;
-  const registro = (hits.get(ip) || []).filter((t) => ahora - t < ventana);
+  const registro = (hits.get(ip) || []).filter((t) => ahora - t < VENTANA);
   registro.push(ahora);
   hits.set(ip, registro);
-  return registro.length > max;
+
+  // Antes el Map crecía para siempre con cada IP vista. Cada 200 peticiones
+  // se barren las entradas cuyo window ya venció (fuga de memoria corregida).
+  limpiezas += 1;
+  if (limpiezas % 200 === 0) {
+    for (const [clave, tiempos] of hits) {
+      const activos = tiempos.filter((t) => ahora - t < VENTANA);
+      if (activos.length) hits.set(clave, activos);
+      else hits.delete(clave);
+    }
+  }
+  return registro.length > MAX_PETICIONES;
 }
 
 /** Edad legible a partir de la fecha de nacimiento (p. ej. "3 año(s)"). */

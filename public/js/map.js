@@ -197,6 +197,33 @@ out center tags;`;
   return [];
 }
 
+/** Normaliza un nombre para comparar: sin acentos, signs ni espacios. */
+function claveVet(nombre = '') {
+  return String(nombre)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+}
+
+/**
+ * Quita duplicados entre OpenStreetMap, la comunidad y las guardadas a mano.
+ * La clave es nombre + coordenadas (4 decimales, ~11 m de precisión).
+ * Preferimos la primera aparición: OSM suele traer el dato más completo.
+ */
+export function deduplicarVets(vets = []) {
+  const vistos = new Set();
+  return vets.filter((v) => {
+    const lat = Number(v.lat);
+    const lng = Number(v.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+    const clave = `${claveVet(v.nombre)}|${lat.toFixed(4)}|${lng.toFixed(4)}`;
+    if (vistos.has(clave)) return false;
+    vistos.add(clave);
+    return true;
+  });
+}
+
 /** Dibuja la lista de veterinarias y devuelve la más cercana. */
 export function dibujarVets(vets, origen) {
   if (!mapa) return null;

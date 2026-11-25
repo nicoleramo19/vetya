@@ -545,7 +545,7 @@ body.contraste .aviso-legal .ico { color: #000000; }
   display: grid;
   place-items: center;
 }
-#qr-canvas { display: block; max-width: 100%; height: auto; }
+#qr-canvas { display: block; max-width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; }
 .texto-emergencia {
   flex: 1 1 240px;
   margin: 0;

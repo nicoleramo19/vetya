@@ -18,6 +18,9 @@ create table if not exists public.pets (
   medicamentos text,
   alergias    text,
   notas       text,
+  veterinario text,
+  telefono_vet text,
+  contacto_dueno text,
   creado_en   timestamptz default now(),
   actualizado_en timestamptz default now()
 );

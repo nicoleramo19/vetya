@@ -23,21 +23,26 @@ function cargarLibreria() {
 }
 
 /** Pinta el QR en un <canvas>. Devuelve true si lo logró. */
-export async function pintarQR(canvas, texto, { tamano = 240, margen = 2 } = {}) {
+export async function pintarQR(canvas, texto, { tamano = 320, margen = 4 } = {}) {
   try {
     const qrcode = await cargarLibreria();
     // typeNumber 0 = la librería elige el tamaño mínimo que quepa en el texto.
-    // 'M' = corrección de errores media (buen equilibrio, admite el logo del centro).
+    // 'M' = corrección de errores media.
     const qr = qrcode(0, 'M');
     qr.addData(texto);
     qr.make();
 
     const modulos = qr.getModuleCount();
-    const escala = Math.max(1, Math.round(tamano / (modulos + margen * 2)));
+    // Zona silenciosa de 4 módulos (la exige el estándar QR) y mínimo 4 px por módulo.
+    // ASÍ LO LEEN LOS TELÉFONOS: antes eran 2 módulos de margen y módulos pequeños.
+    const escala = Math.max(4, Math.round(tamano / (modulos + margen * 2)));
     const lado = (modulos + margen * 2) * escala;
 
     canvas.width = lado;
     canvas.height = lado;
+    // Que el CSS no reescale el canvas: un QR con escala no funciona bien en móvil.
+    canvas.style.width = `${lado}px`;
+    canvas.style.height = `${lado}px`;
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, lado, lado);

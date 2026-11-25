@@ -429,7 +429,7 @@ async function buscarCercaDe(lat, lng) {
     Nube.traerVets().catch(() => []),
   ]);
   const guardadas = leerVetsLocales();
-  const todas = [...osm, ...comunidad, ...guardadas];
+  const todas = Mapa.deduplicarVets([...osm, ...comunidad, ...guardadas]);
 
   if (!todas.length) {
     $('#vets-estado').textContent = 'No encontramos veterinarias registradas en esta zona. Puedes agregar una tú mismo abajo.';
@@ -547,7 +547,7 @@ async function pintarQR() {
   }
   const contenido = Mascotas.textoDeEmergencia(m);
   texto.textContent = contenido;
-  const ok = await QR.pintarQR(canvas, contenido);
+  const ok = await QR.pintarQR(canvas, Mascotas.textoParaQR(m));
   if (!ok) {
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
