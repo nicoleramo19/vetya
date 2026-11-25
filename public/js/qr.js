@@ -23,7 +23,7 @@ function cargarLibreria() {
 }
 
 /** Pinta el QR en un <canvas>. Devuelve true si lo logró. */
-export async function pintarQR(canvas, texto, { tamano = 320, margen = 4 } = {}) {
+export async function pintarQR(canvas, texto, { tamano = 360, margen = 4 } = {}) {
   try {
     const qrcode = await cargarLibreria();
     // typeNumber 0 = la librería elige el tamaño mínimo que quepa en el texto.

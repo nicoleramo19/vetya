@@ -82,34 +82,51 @@ export function textoDeEmergencia(mascota) {
 }
 
 /**
- * Versión COMPACTA para el código QR: menos datos = menos módulos = escanea mejor.
- *
- * Importante: NO incluye dígitos. Los lectores de cámara de iOS/Android detectan
- * secuencias numéricas como teléfono y muestran "Llamar" en vez del texto de la
- * ficha. Al quitar los números, el escaneo muestra la ficha completa.
- * Los teléfonos siguen visibles en la ficha impresa y al compartir.
+ * URL de la ficha pública. El QR apunta aquí en vez de a texto plano:
+ * así el escáner del celular abre la ficha completa en el navegador (no muestra
+ * solo "Llamar" ni lanza una búsqueda de Google) y los teléfonos quedan como
+ * botones `tel:` dentro de la página.
+ */
+const URL_FICHA = 'https://nicoleramo19.github.io/vetya/ficha.html';
+
+function codificarDatos(datos) {
+  const bytes = new TextEncoder().encode(JSON.stringify(datos));
+  let binario = '';
+  bytes.forEach((b) => { binario += String.fromCharCode(b); });
+  return btoa(binario)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
+
+/**
+ * Devuelve la URL corta que debe contener el QR, con todos los datos de la ficha
+ * (incluidos los teléfonos) codificados en el fragmento #, para que no se envíen
+ * a ningún servidor ni queden en logs.
  */
 export function textoParaQR(mascota) {
   if (!mascota) return '';
-  const corto = (valor, max = 28) => {
+  const corto = (valor, max = 60) => {
     if (valor === undefined || valor === null || valor === '') return '';
-    return String(valor)
-      .replace(/\d+/g, '') // evita que el escáner lo interprete como teléfono
-      .replace(/\s+/g, ' ')
-      .trim()
-      .slice(0, max);
+    return String(valor).replace(/\s+/g, ' ').trim().slice(0, max);
   };
 
-  const lineas = [
-    ['FICHA VETYA', corto(mascota.nombre, 18), corto(mascota.especie, 10)]
-      .filter(Boolean)
-      .join(' | '),
-  ];
-  if (mascota.alergias) lineas.push(`ALERG: ${corto(mascota.alergias)}`);
-  if (mascota.condiciones) lineas.push(`COND: ${corto(mascota.condiciones)}`);
-  const vet = corto(mascota.telefonoVet, 20) || corto(mascota.veterinario, 20);
-  if (vet) lineas.push(`VET: ${vet}`);
-  const dueno = corto(mascota.contactoDueno, 20);
-  if (dueno) lineas.push(`DUEÑO: ${dueno}`);
-  return lineas.join('\n').slice(0, 180);
+  const datos = {
+    n: corto(mascota.nombre),
+    e: corto(mascota.especie, 20),
+    r: corto(mascota.raza),
+    c: corto(mascota.condiciones),
+    a: corto(mascota.alergias),
+    m: corto(mascota.medicamentos),
+    v: corto(mascota.veterinario),
+    tv: corto(mascota.telefonoVet, 30),
+    cd: corto(mascota.contactoDueno, 40),
+  };
+
+  // Quita las claves vacías para que la URL sea lo más corta posible.
+  Object.keys(datos).forEach((clave) => {
+    if (!datos[clave]) delete datos[clave];
+  });
+
+  return `${URL_FICHA}#${codificarDatos(datos)}`;
 }

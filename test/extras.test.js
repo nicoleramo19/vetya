@@ -17,35 +17,49 @@ const mascota = {
   contactoDueno: 'Nicole 5512345678',
 };
 
-test('textoParaQR: muestra la ficha y nunca dispara la acción de llamar', () => {
+function decodificarQR(url) {
+  const parte = url.split('#')[1];
+  assert.ok(parte, 'el QR debe ser una URL con datos en #');
+  let base64 = parte.replace(/-/g, '+').replace(/_/g, '/');
+  base64 += '='.repeat((4 - (base64.length % 4)) % 4);
+  return JSON.parse(Buffer.from(base64, 'base64').toString('utf8'));
+}
+
+test('textoParaQR: abre la ficha completa, incluidos los teléfonos', () => {
   const qr = textoParaQR(mascota);
-  assert.ok(qr.includes('FICHA VETYA'));
-  assert.ok(qr.includes('Paprika'));
-  assert.ok(qr.includes('gato'));
-  assert.ok(qr.includes('ALERG: pollo'));
-  assert.ok(qr.includes('COND: insuficiencia renal'));
-  assert.ok(qr.includes('VET: Vet Central'));
-  assert.ok(qr.includes('DUEÑO: Nicole'));
-  assert.ok(!/\d/.test(qr), 'el QR no debe contener dígitos: el móvil muestra "Llamar"');
-  assert.ok(qr.length <= 180);
+  assert.ok(qr.startsWith('https://nicoleramo19.github.io/vetya/ficha.html#'));
+  const datos = decodificarQR(qr);
+  assert.equal(datos.n, 'Paprika');
+  assert.equal(datos.e, 'gato');
+  assert.equal(datos.a, 'pollo');
+  assert.equal(datos.c, 'insuficiencia renal');
+  assert.equal(datos.v, 'Vet Central');
+  assert.equal(datos.tv, '5512345678');
+  assert.equal(datos.cd, 'Nicole 5512345678');
+  assert.ok(qr.length <= 600);
 });
 
-test('textoParaQR: omite campos vacíos y prefiere el teléfono del veterinario', () => {
+test('textoParaQR: omite los campos vacíos', () => {
   const qr = textoParaQR({ nombre: 'Coco', especie: 'perro', veterinario: 'Vet Central' });
-  assert.ok(qr.includes('VET: Vet Central'));
-  assert.ok(!qr.includes('ALERG'));
-  assert.ok(!qr.includes('COND'));
-  assert.ok(!qr.includes('DUEÑO'));
+  const datos = decodificarQR(qr);
+  assert.equal(datos.n, 'Coco');
+  assert.equal(datos.v, 'Vet Central');
+  assert.equal(datos.a, undefined);
+  assert.equal(datos.c, undefined);
+  assert.equal(datos.tv, undefined);
+  assert.equal(datos.cd, undefined);
 });
 
-test('textoParaQR: recorta textos muy largos para que el QR siga siendo escaneable', () => {
+test('textoParaQR: recorta textos largos para que el QR siga siendo escaneable', () => {
   const qr = textoParaQR({
     nombre: 'Nombre extremadamente largo que no cabe en una tarjeta',
     especie: 'perro',
     alergias: 'una lista interminable de alimentos y medicamentos prohibidos',
   });
-  assert.ok(qr.length <= 180);
-  assert.ok(qr.split('\n').every((linea) => linea.length <= 60));
+  const datos = decodificarQR(qr);
+  assert.ok(datos.n.length <= 60);
+  assert.ok(datos.a.length <= 60);
+  assert.ok(qr.length <= 600);
 });
 
 test('textoDeEmergencia: la ficha completa sigue intacta para las personas', () => {

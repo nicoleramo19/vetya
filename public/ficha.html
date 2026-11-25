@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ficha de emergencia · VetYa</title>
+  <style>
+    :root { color-scheme: light; --azul: #0b2545; --rojo: #c62828; --gris: #5b6b7b; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--azul); background: #f4f8fb; }
+    main { max-width: 42rem; margin: 0 auto; padding: 1.25rem; }
+    header { display: flex; align-items: center; gap: .6rem; margin-bottom: 1rem; }
+    header strong { font-size: 1.35rem; letter-spacing: .02em; }
+    .tarjeta { background: #fff; border: 1px solid #d9e4ee; border-radius: 18px; padding: 1.25rem; box-shadow: 0 8px 24px rgba(11,37,69,.08); }
+    h1 { margin: 0 0 .15rem; font-size: 1.7rem; }
+    .especie { color: var(--gris); margin: 0 0 1rem; text-transform: capitalize; }
+    dl { margin: 0; display: grid; gap: .8rem; }
+    dt { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--gris); }
+    dd { margin: .1rem 0 0; font-size: 1.05rem; overflow-wrap: anywhere; }
+    .alerta { border-left: 4px solid var(--rojo); background: #fff4f4; padding: .6rem .8rem; border-radius: 8px; }
+    .acciones { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.2rem; }
+    a.boton { display: inline-block; padding: .7rem 1rem; border-radius: 10px; background: var(--azul); color: #fff; text-decoration: none; font-weight: 700; }
+    a.boton.rojo { background: var(--rojo); }
+    .aviso { margin-top: 1rem; font-size: .85rem; color: var(--gris); }
+    .error { color: var(--rojo); font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main>
+    <header><strong>VetYa</strong><span>· Ficha de emergencia</span></header>
+    <div id="ficha" class="tarjeta">Leyendo la ficha…</div>
+    <p class="aviso">Esta ficha orienta a quien cuide a tu mascota. No sustituye una consulta veterinaria.</p>
+  </main>
+  <script>
+    function decodificar(parte) {
+      let base64 = parte.replace(/-/g, '+').replace(/_/g, '/');
+      base64 += '='.repeat((4 - (base64.length % 4)) % 4);
+      const binario = atob(base64);
+      const bytes = Uint8Array.from(binario, (c) => c.charCodeAt(0));
+      return JSON.parse(new TextDecoder().decode(bytes));
+    }
+
+    function texto(valor) {
+      return valor === undefined || valor === null ? '' : String(valor).trim();
+    }
+
+    function telefonizable(valor) {
+      return texto(valor).replace(/[^\d+]/g, '');
+    }
+
+    function fila(titulo, valor, alerta) {
+      if (!valor) return '';
+      return `<div${alerta ? ' class="alerta"' : ''}><dt>${titulo}</dt><dd>${valor}</dd></div>`;
+    }
+
+    function escapar(valor) {
+      return texto(valor).replace(/[&<>"']/g, (c) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+      })[c]);
+    }
+
+    function mostrar(datos) {
+      const nombre = escapar(datos.n) || 'Mascota sin nombre';
+      const especie = escapar(datos.e);
+      const vetTel = telefonizable(datos.tv);
+      const duenoTel = telefonizable(datos.cd);
+
+      const html = `
+        <h1>${nombre}</h1>
+        ${especie ? `<p class="especie">${especie}</p>` : ''}
+        <dl>
+          ${fila('Alergias', escapar(datos.a), true)}
+          ${fila('Condiciones', escapar(datos.c))}
+          ${fila('Medicamentos', escapar(datos.m))}
+          ${fila('Raza', escapar(datos.r))}
+          ${fila('Veterinario', escapar(datos.v))}
+          ${fila('Teléfono del veterinario', escapar(datos.tv))}
+          ${fila('Contacto del dueño', escapar(datos.cd))}
+        </dl>
+        <div class="acciones">
+          ${vetTel ? `<a class="boton rojo" href="tel:${vetTel}">Llamar al veterinario</a>` : ''}
+          ${duenoTel ? `<a class="boton" href="tel:${duenoTel}">Llamar al dueño</a>` : ''}
+        </div>`;
+      document.getElementById('ficha').innerHTML = html;
+    }
+
+    try {
+      const hash = location.hash.slice(1);
+      if (!hash) throw new Error('La ficha no trae datos.');
+      mostrar(decodificar(hash));
+    } catch (error) {
+      document.getElementById('ficha').innerHTML =
+        `<p class="error">No pude leer la ficha: ${escapar(error.message)}</p>`;
+    }
+  </script>
+</body>
+</html>
