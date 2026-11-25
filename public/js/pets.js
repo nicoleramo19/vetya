@@ -83,22 +83,33 @@ export function textoDeEmergencia(mascota) {
 
 /**
  * Versión COMPACTA para el código QR: menos datos = menos módulos = escanea mejor.
- * La ficha completa sigue visible al lado para las personas.
+ *
+ * Importante: NO incluye dígitos. Los lectores de cámara de iOS/Android detectan
+ * secuencias numéricas como teléfono y muestran "Llamar" en vez del texto de la
+ * ficha. Al quitar los números, el escaneo muestra la ficha completa.
+ * Los teléfonos siguen visibles en la ficha impresa y al compartir.
  */
 export function textoParaQR(mascota) {
   if (!mascota) return '';
-  const corto = (valor, max = 28) =>
-    String(valor).replace(/\s+/g, ' ').trim().slice(0, max);
+  const corto = (valor, max = 28) => {
+    if (valor === undefined || valor === null || valor === '') return '';
+    return String(valor)
+      .replace(/\d+/g, '') // evita que el escáner lo interprete como teléfono
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, max);
+  };
 
   const lineas = [
-    ['VETYA', corto(mascota.nombre, 18), corto(mascota.especie, 10)]
+    ['FICHA VETYA', corto(mascota.nombre, 18), corto(mascota.especie, 10)]
       .filter(Boolean)
       .join(' | '),
   ];
   if (mascota.alergias) lineas.push(`ALERG: ${corto(mascota.alergias)}`);
   if (mascota.condiciones) lineas.push(`COND: ${corto(mascota.condiciones)}`);
-  if (mascota.telefonoVet) lineas.push(`VET: ${corto(mascota.telefonoVet, 20)}`);
-  else if (mascota.veterinario) lineas.push(`VET: ${corto(mascota.veterinario, 20)}`);
-  if (mascota.contactoDueno) lineas.push(`DUEÑO: ${corto(mascota.contactoDueno, 20)}`);
+  const vet = corto(mascota.telefonoVet, 20) || corto(mascota.veterinario, 20);
+  if (vet) lineas.push(`VET: ${vet}`);
+  const dueno = corto(mascota.contactoDueno, 20);
+  if (dueno) lineas.push(`DUEÑO: ${dueno}`);
   return lineas.join('\n').slice(0, 180);
 }

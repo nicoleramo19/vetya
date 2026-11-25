@@ -1,5 +1,5 @@
 /* Service worker de VetYa: guarda la app para que funcione sin conexión. */
-const CACHE = 'vetya-v7';
+const CACHE = 'vetya-v8';
 const ARCHIVOS = [
   '/',
   '/index.html',

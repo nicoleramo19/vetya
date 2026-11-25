@@ -17,15 +17,16 @@ const mascota = {
   contactoDueno: 'Nicole 5512345678',
 };
 
-test('textoParaQR: versión compacta pero con lo esencial', () => {
+test('textoParaQR: muestra la ficha y nunca dispara la acción de llamar', () => {
   const qr = textoParaQR(mascota);
-  assert.ok(qr.includes('VETYA'));
+  assert.ok(qr.includes('FICHA VETYA'));
   assert.ok(qr.includes('Paprika'));
   assert.ok(qr.includes('gato'));
   assert.ok(qr.includes('ALERG: pollo'));
   assert.ok(qr.includes('COND: insuficiencia renal'));
-  assert.ok(qr.includes('VET: 5512345678'));
-  assert.ok(qr.includes('DUEÑO: Nicole 5512345678'));
+  assert.ok(qr.includes('VET: Vet Central'));
+  assert.ok(qr.includes('DUEÑO: Nicole'));
+  assert.ok(!/\d/.test(qr), 'el QR no debe contener dígitos: el móvil muestra "Llamar"');
   assert.ok(qr.length <= 180);
 });
 
