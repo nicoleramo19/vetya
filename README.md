@@ -3,7 +3,12 @@
 > Orienta en urgencias, **no sustituye una consulta veterinaria**.
 
 Sitio web desplegado en: https://vetya-umie.onrender.com  
+App estática siempre al día: https://nicoleramo19.github.io/vetya/public/index.html  
 Repositorio: `nicoleramo19/vetya`
+
+Documentación completa:
+- [Manual técnico](MANUAL_TECNICO.md)
+- [Guion de defensa oral](GUION_DEFENSA.md)
 
 ---
 
@@ -28,7 +33,7 @@ Además: perfil de mascotas con historial, QR de ficha de emergencia, chat con I
   ├── public/js/data/protocols.js .. base de conocimiento (síntomas, tóxicos, pasos)
   ├── public/js/map.js ............. Leaflet + OpenStreetMap / Nominatim
   ├── public/js/supabase.js ........ Auth + Postgres + RLS
-  └── public/sw.js ................. caché offline ("vetya-v7")
+  └── public/sw.js ................. caché offline ("vetya-v10")
              │
              ├── /api/config ──► Express ──► config pública (sin secretos)
              └── /api/chat ────► Express ──► Groq (IA SOLO explica, NO clasifica)
@@ -68,7 +73,7 @@ Además: perfil de mascotas con historial, QR de ficha de emergencia, chat con I
 ```bash
 npm install
 cp .env.example .env      # completar SUPABASE_URL, SUPABASE_ANON_KEY, GROQ_API_KEY
-npm start                 # http://localhost:3000
+npm start                 # http://localhost:3000 (o el PORT de tu .env)
 npm test                  # 24 pruebas (triaje, QR y directorio)
 ```
 
@@ -106,7 +111,7 @@ Sin `GROQ_API_KEY` la app funciona en **modo plantillas**; sin `SUPABASE_URL` fu
 "Supabase con Row Level Security. Las policies exigen `auth.uid() = owner_id` en mascotas e historial. La anon key es pública por diseño; la seguridad está en la base de datos, no en el frontend."
 
 **4. ¿Qué pasa si no hay internet o falla la IA?**  
-"El Service Worker guarda la app y los protocolos en caché (`vetya-v7`), así que se puede usar sin conexión. Si Groq falla, el backend responde error y el chat cambia solo al redactor local de plantillas: el resultado del triaje no depende de la IA. También hay un límite de 20 peticiones por minuto para cuidar la capa gratuita."
+"El Service Worker guarda la app y los protocolos en caché (`vetya-v10`), así que se puede usar sin conexión. Si Groq falla, el backend responde error y el chat cambia solo al redactor local de plantillas: el resultado del triaje no depende de la IA. También hay un límite de 20 peticiones por minuto para cuidar la capa gratuita."
 
 **5. ¿Cómo demuestras que tu código funciona?**  
 "Con 24 pruebas automatizadas (`npm test`) que cubren los parches críticos de la auditoría: falsos positivos de tóxicos, nivel del aguacate, escalado por condiciones crónicas, el QR compacto y la deduplicación de veterinarias. También verifiqué la app en escritorio y móvil y dejé la consola sin errores."
@@ -116,7 +121,7 @@ Sin `GROQ_API_KEY` la app funciona en **modo plantillas**; sin `SUPABASE_URL` fu
 ## 7. Estado honesto para la hoja de cotejo
 
 - **SÍ:** HTML5 semántico, accesibilidad, CSS Grid/Flexbox, responsive, JS ES6+, DOM/eventos, Async/Fetch, APIs externas (Groq, OSM), SEO y metadatos, Node/Express, GET/POST, base de datos, deploy, seguridad básica, testing.
-- **PARCIAL:** CRUD en la nube (sincronización de campos de contacto del veterinario pendiente), API REST propia (el foco está en Supabase + un endpoint de chat), Git/GitHub (el repo remoto existe; esta carpeta no tiene `.git` local, así que tests y README aún no están subidos).
+- **PARCIAL:** CRUD en la nube (sincronización de campos de contacto del veterinario pendiente), API REST propia (el foco está en Supabase + un endpoint de chat), Git/GitHub (el repo remoto está actualizado; esta carpeta de trabajo no tiene `.git` local).
 - **NO:** React / hooks / React Router / estilos en React. El proyecto eligió la rama de backend que la propia rúbrica permite ("backend ... **y/o** React"). No se marcó SÍ sin evidencia.
 
 **Ya corregido en esta sesión:** zona silenciosa del QR (4 módulos), payload compacto, píxeles sin reescalado, `trust proxy` para Render, fuga de memoria del rate limiter y duplicados de veterinarias.
