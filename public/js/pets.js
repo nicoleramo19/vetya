@@ -87,7 +87,7 @@ export function textoDeEmergencia(mascota) {
  * solo "Llamar" ni lanza una búsqueda de Google) y los teléfonos quedan como
  * botones `tel:` dentro de la página.
  */
-const URL_FICHA = 'https://nicoleramo19.github.io/vetya/ficha.html';
+const URL_FICHA = 'https://nicoleramo19.github.io/vetya/public/ficha.html';
 
 function codificarDatos(datos) {
   const bytes = new TextEncoder().encode(JSON.stringify(datos));

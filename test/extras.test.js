@@ -27,7 +27,7 @@ function decodificarQR(url) {
 
 test('textoParaQR: abre la ficha completa, incluidos los teléfonos', () => {
   const qr = textoParaQR(mascota);
-  assert.ok(qr.startsWith('https://nicoleramo19.github.io/vetya/ficha.html#'));
+  assert.ok(qr.startsWith('https://nicoleramo19.github.io/vetya/public/ficha.html#'));
   const datos = decodificarQR(qr);
   assert.equal(datos.n, 'Paprika');
   assert.equal(datos.e, 'gato');
