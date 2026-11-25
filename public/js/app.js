@@ -873,7 +873,7 @@ async function iniciar() {
 
   // Service worker para uso sin conexión
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
+    navigator.serviceWorker.register(new URL('../sw.js', import.meta.url)).catch(() => {});
   }
 }
 
