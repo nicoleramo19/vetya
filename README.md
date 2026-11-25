@@ -7,6 +7,7 @@ App estática siempre al día: https://nicoleramo19.github.io/vetya/public/index
 Repositorio: `nicoleramo19/vetya`
 
 Documentación completa:
+- [Ficha del proyecto](FICHA_PROYECTO.md) — mismo formato que la ficha de la captura
 - [Manual técnico](MANUAL_TECNICO.md)
 - [Guion de defensa oral](GUION_DEFENSA.md)
 
